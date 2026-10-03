@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Поймай квадрат</title>
+<style>
+  html, body {
+    margin: 0; height: 100%; overflow: hidden;
+    background: #111; font-family: sans-serif; color: white;
+    touch-action: none;
+  }
+  canvas { display: block; width: 100%; height: 100%; }
+  #hud { position: fixed; top: 10px; left: 10px; font-size: 22px; z-index: 2; }
+</style>
+</head>
+<body>
+<div id="hud">Счёт: <span id="score">0</span></div>
+<canvas id="game"></canvas>
+<script>
+const canvas = document.getElementById('game');
+const ctx = canvas.getContext('2d');
+const scoreEl = document.getElementById('score');
+let W, H, score = 0;
+let target = { x: 0, y: 0, size: 70 };
+let player = { x: 0, y: 0, size: 50 };
+
+function resize() {
+  const dpr = window.devicePixelRatio || 1;
+  canvas.width = innerWidth * dpr;
+  canvas.height = innerHeight * dpr;
+  canvas.style.width = innerWidth + 'px';
+  canvas.style.height = innerHeight + 'px';
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  W = innerWidth; H = innerHeight;
+  if (player.x === 0 && player.y === 0) { player.x = W/2; player.y = H/2; }
+  moveTarget();
+}
+function moveTarget() {
+  target.size = 60 + Math.random() * 40;
+  target.x = Math.random() * (W - target.size);
+  target.y = Math.random() * (H - target.size);
+}
+function draw() {
+  ctx.clearRect(0, 0, W, H);
+  ctx.fillStyle = '#4ade80';
+  ctx.fillRect(target.x, target.y, target.size, target.size);
+  ctx.fillStyle = '#60a5fa';
+  ctx.beginPath();
+  ctx.arc(player.x, player.y, player.size/2, 0, Math.PI*2);
+  ctx.fill();
+}
+function update() {
+  const cx = Math.max(target.x, Math.min(player.x, target.x + target.size));
+  const cy = Math.max(target.y, Math.min(player.y, target.y + target.size));
+  const dx = player.x - cx, dy = player.y - cy;
+  if (dx*dx + dy*dy < (player.size/2)**2) {
+    score++; scoreEl.textContent = score; moveTarget();
+  }
+  draw(); requestAnimationFrame(update);
+}
+function movePlayer(x, y) { player.x = x; player.y = y; }
+canvas.addEventListener('touchstart', e => { e.preventDefault(); movePlayer(e.touches[0].clientX, e.touches[0].clientY); }, {passive:false});
+canvas.addEventListener('touchmove',  e => { e.preventDefault(); movePlayer(e.touches[0].clientX, e.touches[0].clientY); }, {passive:false});
+canvas.addEventListener('mousemove',  e => movePlayer(e.clientX, e.clientY));
+window.addEventListener('resize', resize);
+resize(); update();
+</script>
+</body>
+</html>
